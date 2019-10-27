@@ -17,6 +17,8 @@ from keras.layers import Dense, Embedding, SpatialDropout1D
 from keras.layers import LSTM
 from sklearn.metrics.classification import classification_report
 from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import chi2
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 max_features = 2000
 # cut texts after this number of words (among top max_features most common words)
@@ -36,6 +38,21 @@ fig = plt.figure(figsize = (6,4))
 data.groupby('label').tweet.count().plot.bar(ylim=0)
 plt.show()
 
+tfidf = TfidfVectorizer(max_features=30000,ngram_range=(1, 1))
+X_tfidf = tfidf.fit_transform(data['tweet'])
+y = data['label']
+chi2score = chi2(X_tfidf, y)[0]
+plt.figure(figsize=(12,8))
+scores = list(zip(tfidf.get_feature_names(), chi2score))
+chi2 = sorted(scores, key=lambda x:x[1])
+topchi2 = list(zip(*chi2[-20:]))
+x = range(len(topchi2[1]))
+labels = topchi2[0]
+plt.barh(x,topchi2[1], align='center', alpha=0.5)
+plt.plot(topchi2[1], x, '-o', markersize=5, alpha=0.8)
+plt.yticks(x, labels)
+plt.xlabel('word count')
+plt.show();
 
 # Data preprocessing
 # Cleaning the texts
@@ -130,3 +147,8 @@ if(np.argmax(sentiment) == 0):
     print("non offensive")
 elif (np.argmax(sentiment) == 1):
     print("offensive")
+    
+    
+
+
+
